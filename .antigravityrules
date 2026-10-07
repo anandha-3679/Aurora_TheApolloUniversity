@@ -1,0 +1,7 @@
+# Antigravity Rules
+
+- Output unified diffs only, no entire file rewrites.
+- Zero conversational preamble.
+- Python PEP8 standards strictly enforced.
+- Mandate all test executions use `pytest -q`.
+- Linters must run in quiet/errors-only mode without verbose stack traces.
