@@ -180,8 +180,18 @@ with tab1:
 
     delays = [0, 3, 7, 14]
     candidate_risks = []
-    tradeoff_summary = tumor_engine.compute_summary_tradeoff(
-        initial_volume=tumor_vol, candidate_delays=delays
+
+    # Fit patient Gompertz parameters strictly on past data (day_index <= sim_day)
+    patient_clin_past = p_clin[p_clin["day_index"] <= sim_day]
+    gomp_fit = tumor_engine.fit_patient_parameters(
+        patient_clin_past, decision_day=sim_day
+    )
+    tradeoff_summary = tumor_engine.forecast_with_uncertainty(
+        current_volume=gomp_fit["volume_at_d"],
+        candidate_delays=delays,
+        growth_rate=gomp_fit["growth_rate"],
+        kill_fraction=gomp_fit["kill_fraction"],
+        residual_std=gomp_fit["residual_std"],
     )
 
     # Freeze wearable history strictly at current decision day (<= sim_day)
@@ -242,13 +252,14 @@ with tab1:
     col_l, col_r = st.columns([3, 2])
 
     with col_l:
-        # Dual-axis Interactive Trade-Off Plot
+        # Dual-axis Interactive Trade-Off Plot with 90% Uncertainty Band
         fig_tradeoff = go.Figure()
 
         # Toxicity Risk Line
+        delay_labels = [f"+{d} days" for d in delays]
         fig_tradeoff.add_trace(
             go.Scatter(
-                x=[f"+{d} days" for d in delays],
+                x=delay_labels,
                 y=[r * 100 for r in candidate_risks],
                 name="Severe Toxicity Risk (%)",
                 mode="lines+markers",
@@ -257,13 +268,44 @@ with tab1:
             )
         )
 
-        # Regrowth Penalty Line
+        # Regrowth Penalty Line & 90% Uncertainty Bounds
         penalties = [tradeoff_summary[d]["regrowth_penalty_pct"] for d in delays]
+        v_d0 = tradeoff_summary[0]["volume_at_dose_cm3"]
+        v_upper_pen = [
+            round(((tradeoff_summary[d]["upper_bound_90_cm3"] - v_d0) / v_d0) * 100, 1)
+            for d in delays
+        ]
+        v_lower_pen = [
+            round(
+                max(
+                    0.0,
+                    ((tradeoff_summary[d]["lower_bound_90_cm3"] - v_d0) / v_d0) * 100,
+                ),
+                1,
+            )
+            for d in delays
+        ]
+
+        # 90% Confidence Band Ribbon
         fig_tradeoff.add_trace(
             go.Scatter(
-                x=[f"+{d} days" for d in delays],
+                x=delay_labels + delay_labels[::-1],
+                y=v_upper_pen + v_lower_pen[::-1],
+                fill="toself",
+                fillcolor="rgba(41, 128, 185, 0.18)",
+                line=dict(color="rgba(255,255,255,0)"),
+                hoverinfo="skip",
+                showlegend=True,
+                name="90% Regrowth Uncertainty Band",
+                yaxis="y2",
+            )
+        )
+
+        fig_tradeoff.add_trace(
+            go.Scatter(
+                x=delay_labels,
                 y=penalties,
-                name="Tumor Regrowth Penalty (%)",
+                name="Fitted Tumor Regrowth Penalty (%)",
                 mode="lines+markers",
                 line=dict(color="#2980b9", width=3, dash="dot"),
                 marker=dict(size=9),
@@ -271,20 +313,25 @@ with tab1:
             )
         )
 
+        max_y2 = max(120.0, max(v_upper_pen) * 1.25)
         fig_tradeoff.update_layout(
-            title="Toxicity Risk vs Tumor Regrowth by Delay Window",
+            title=(
+                "Toxicity Risk vs Tumor Regrowth by Delay Window<br>"
+                f"<sup>Patient α = {gomp_fit['growth_rate']:.3f}/day, "
+                f"Kill = {gomp_fit['kill_fraction']:.1%}</sup>"
+            ),
             xaxis_title="Candidate Dosing Window",
             yaxis=dict(title="Toxicity Risk (%)", range=[0, 100], color="#e74c3c"),
             yaxis2=dict(
                 title="Tumor Excess Growth (%)",
                 overlaying="y",
                 side="right",
-                range=[0, max(120, max(penalties) * 1.2)],
+                range=[0, max_y2],
                 color="#2980b9",
             ),
-            legend=dict(x=0.05, y=0.95),
-            margin=dict(l=40, r=40, t=50, b=40),
-            height=380,
+            legend=dict(x=0.03, y=0.97),
+            margin=dict(l=40, r=40, t=55, b=40),
+            height=390,
         )
         st.plotly_chart(fig_tradeoff, use_container_width=True)
 
@@ -307,6 +354,10 @@ with tab1:
         for i, d in enumerate(delays):
             risk = candidate_risks[i]
             pen = tradeoff_summary[d]["regrowth_penalty_pct"]
+            low_vol = tradeoff_summary[d]["lower_bound_90_cm3"]
+            upp_vol = tradeoff_summary[d]["upper_bound_90_cm3"]
+            vol_d = tradeoff_summary[d]["volume_at_dose_cm3"]
+
             if risk < opt_thresh:
                 status = "🟢 Lower risk"
             elif risk <= 2.0 * opt_thresh:
@@ -320,6 +371,7 @@ with tab1:
                     "Toxicity Risk": f"{risk * 100:.1f}%",
                     "Tier": status,
                     "Regrowth": f"+{pen:.1f}%",
+                    "Vol 90% CI": f"{vol_d:.1f} [{low_vol:.1f}–{upp_vol:.1f}]",
                 }
             )
 
@@ -355,7 +407,11 @@ with tab1:
             f"**Tiers (T = {opt_thresh:.2f}):** "
             f"🟢 Lower risk (< {opt_thresh:.2f}) | "
             f"🟡 Elevated ({opt_thresh:.2f}–{2*opt_thresh:.2f}) | "
-            f"🔴 High risk (> {2*opt_thresh:.2f})"
+            f"🔴 High risk (> {2*opt_thresh:.2f})\n\n"
+            f"**Patient Fit (day ≤ {sim_day}):** "
+            f"α = {gomp_fit['growth_rate']:.3f}/d, "
+            f"kill = {gomp_fit['kill_fraction']:.1%}, "
+            f"σ = {gomp_fit['residual_std']:.2f} cm³"
         )
 
         st.info(

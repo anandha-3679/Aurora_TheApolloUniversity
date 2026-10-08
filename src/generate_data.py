@@ -99,13 +99,15 @@ def generate_synthetic_data(
         p_base_steps = np.random.normal(6500, 1000)
         p_base_sleep = np.random.normal(440, 35)
 
-        # Baseline tumor volume
+        # Baseline tumor volume and patient-specific Gompertzian kinetics
         initial_vol = (
             12.0 if stages[idx] == "II" else (22.0 if stages[idx] == "III" else 35.0)
         )
         curr_tumor_vol = initial_vol
-        gomp_a = 0.04
+        # True biological parameters vary per patient
+        gomp_a = float(np.clip(np.random.normal(0.042, 0.007), 0.025, 0.065))
         gomp_k = 100.0
+        gomp_kill = float(np.clip(np.random.normal(0.35, 0.05), 0.20, 0.50))
 
         # Each patient has their own random physiological marrow recovery rate
         p_recovery_rate = float(np.clip(np.random.normal(1.0, 0.18), 0.65, 1.45))
@@ -201,13 +203,19 @@ def generate_synthetic_data(
             tx_admin = regimen if is_dosing_day else "None"
             dose_val = planned_dose if is_dosing_day else 0.0
 
-            # Tumor progression
+            # True latent tumor progression
             growth = gomp_a * curr_tumor_vol * np.log(
                 max(1.001, gomp_k / curr_tumor_vol)
             )
             curr_tumor_vol = min(gomp_k, max(0.5, curr_tumor_vol + growth))
             if is_dosing_day:
-                curr_tumor_vol = max(0.2, curr_tumor_vol * 0.68)
+                curr_tumor_vol = max(0.2, curr_tumor_vol * (1.0 - gomp_kill))
+
+            # Observed tumor volume with measurement noise (e.g. imaging variance)
+            obs_tumor_vol = max(
+                0.2,
+                np.round(curr_tumor_vol + np.random.normal(0, 0.45), 2),
+            )
 
             obs_anc = max(0.1, np.round(latent_anc[day] + np.random.normal(0, 0.1), 2))
             obs_wbc = max(0.8, np.round(obs_anc * 2.2 + np.random.normal(0, 0.25), 2))
@@ -220,7 +228,7 @@ def generate_synthetic_data(
                     "dose_mg": dose_val,
                     "anc": obs_anc,
                     "wbc": obs_wbc,
-                    "tumor_volume_cm3": np.round(curr_tumor_vol, 2),
+                    "tumor_volume_cm3": obs_tumor_vol,
                 }
             )
 

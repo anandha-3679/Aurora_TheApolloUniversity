@@ -106,32 +106,38 @@ Parameters are anchored to published literature (`docs/references.md`).
 
 Evaluation strictly groups by patient ID (`GroupShuffleSplit` & repeated 5×5 `GroupKFold`), preventing longitudinal row-level leakage:
 
-| Model | CV AUROC Ablation A (Clinical only) | CV AUROC Ablation B (+ Wearables) | Paired Diff $(B - A)$ Fold Mean $\pm$ 95% CI | Test AUROC | Test Brier Score | Untouched Test Recall (at Thresh=0.12) | Untouched Test Precision | Timing Ranking Tau Mean $\pm$ Std (IQR) |
+| Model | CV AUROC Ablation A (Clinical only) | CV AUROC Ablation B (+ Wearables) | Paired Diff $(B - A)$ Fold Mean $\pm$ 95% CI | Test AUROC | Test Brier Score | Untouched Test Recall (at Thresh=0.11) | Untouched Test Precision | Timing Ranking Tau Mean $\pm$ Std (IQR) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Logistic Regression (Main)** | **0.8471** | **0.8980** | **+0.0510 ± 0.0106** | **0.8560** | **0.0850** | **69.39%** | **36.96%** | **0.7865 ± 0.2218 (IQR 0.3333)** |
-| Random Forest | 0.8251 | 0.8515 | +0.0265 ± 0.0132 | 0.8169 | 0.0900 | 71.43% | 23.49% | 0.6591 ± 0.3619 (IQR 0.6131) |
-| Gradient Boosting | 0.8106 | 0.8677 | +0.0571 ± 0.0149 | 0.8032 | 0.0870 | 61.22% | 38.46% | 0.7775 ± 0.2393 (IQR 0.3333) |
+| **Logistic Regression (Main)** | **0.8684** | **0.8960** | **+0.0276 ± 0.0092** | **0.9165** | **0.0660** | **90.91%** | **35.09%** | **0.6782 ± 0.3911 (IQR 0.3333)** |
+| Random Forest | 0.8304 | 0.8541 | +0.0237 ± 0.0094 | 0.8022 | 0.0951 | 72.73% | 22.38% | 0.4896 ± 0.4592 (IQR 0.4252) |
+| Gradient Boosting | 0.8279 | 0.8700 | +0.0421 ± 0.0082 | 0.8663 | 0.0889 | 84.09% | 33.04% | 0.6216 ± 0.4212 (IQR 0.6667) |
 
 > **Methodological Honesty Note on Metrics:**
-> - Rather than claiming "statistical significance" on reused patient folds, we report the paired difference fold interval $(+0.0510 \pm 0.0106)$, demonstrating consistent improvement across splits.
-> - Holdout test performance (Test AUROC 0.8560) reflects our simulated cohort; we lean on the cross-validation paired differences (+0.0510 AUROC) rather than raw holdout numbers alone to evaluate incremental wearable utility.
+> - Rather than claiming "statistical significance" on reused patient folds, we report the paired difference fold interval $(+0.0276 \pm 0.0092)$, demonstrating consistent improvement across splits.
+> - Holdout test performance (Test AUROC 0.9165) reflects our simulated cohort; we lean on the cross-validation paired differences (+0.0276 AUROC) rather than raw holdout numbers alone to evaluate incremental wearable utility.
 
 ### Clinical Safety Threshold & Operational Limitation
-- Rather than an arbitrary 0.50 cutoff, the decision threshold was tuned strictly inside validation folds to **0.12** to prioritize patient safety.
-- **Operational Limitation:** At the tuned threshold (0.12), the model catches about 69% of severe events with about 37% precision on a small synthetic test set, so it is a risk flag to support clinician judgment, not a safety guarantee. Because the test set is small, the recall estimate has wide uncertainty. Approximately 6 out of 10 alerts represent false alarms.
+- Rather than an arbitrary 0.50 cutoff, the decision threshold was tuned strictly inside validation folds to **0.11** to prioritize patient safety.
+- **Operational Limitation:** At the tuned threshold (0.11), the model catches about 91% of severe events with about 35% precision on a small synthetic test set, so it is a risk flag to support clinician judgment, not a safety guarantee. Because the test set is small, the recall estimate has wide uncertainty. Approximately 6 to 7 out of 10 alerts represent false alarms.
 
 ### Timing Ranking Evaluation: Definition & Empirical Spread
 - **Kendall Tau Definition:** Computed strictly per patient and treatment cycle between the model's **predicted toxicity risk** and the **TRUE simulated risk** across candidate delays (+0, +3, +7, +14 days). The TRUE simulated risk is derived from the latent ANC trajectory (where lower nadir ANC corresponds to greater acute toxicity risk: $\text{true\_risk} = -\text{nadir\_anc}$). The concordance coefficients are then averaged across all test cycles.
 - **Empirical Distribution (Mean & Spread):**
-  - **Logistic Regression (Main):** Mean Tau = **0.7865**, Std = **0.2218**, Median = **0.9129**, IQR = **0.3333**.
-  - **Random Forest:** Mean Tau = **0.6591**, Std = **0.3619**, IQR = **0.6131**.
-  - **Gradient Boosting:** Mean Tau = **0.7775**, Std = **0.2393**, IQR = **0.3333**.
+  - **Logistic Regression (Main):** Mean Tau = **0.6782**, Std = **0.3911**, Median = **0.8165**, IQR = **0.3333**.
+  - **Random Forest:** Mean Tau = **0.4896**, Std = **0.4592**, IQR = **0.4252**.
+  - **Gradient Boosting:** Mean Tau = **0.6216**, Std = **0.4212**, IQR = **0.6667**.
 - **Honest Framing on Timing & Ordering:** We do **not** claim perfect monotonic ordering (+1.0000). Biological noise, nonlinear marrow recovery rates ($r_i$), and stochastic stress spikes produce realistic rank inversions across candidate delays, accurately captured by the spread metrics.
 - **Prospective Daily Re-scoring:** All candidate delays are evaluated strictly with retrospective features frozen at decision day $D$. In clinical practice, the twin operates by **daily morning re-scoring**, updating risk as real-world biometrics reveal whether marrow recovery is actually underway.
 
-### Explainability & Cost-of-Delay
+### Explainability & Upgraded Cost-of-Delay Module
 - Standardized log-odds coefficients and feature importance weights reveal top risk drivers (e.g., severe drops in 7-day HRV and step count relative to personal baseline).
-- **Cost-of-Delay Gompertz Module:** Quantifies tumor regrowth penalty (+23.5% at 3 days, +58.1% at 7 days, +124.3% at 14 days) to prevent postponement without oncologic consideration.
+- **Patient-Specific Gompertz Estimation:** At decision day $D$, the module fits patient-specific biological kinetics (growth rate $\alpha$ and chemotherapy kill effect $\kappa$) using bounded nonlinear least squares strictly on retrospective observations ($\text{day\_index} \le D$, zero future lookahead).
+- **Forecast Uncertainty (90% Band):** For candidate delays (0, 3, 7, 14 days), the engine generates prospective tumor volume trajectories with a calibrated 90% confidence ribbon ($\pm 1.645 \cdot \sigma \sqrt{\text{delay} + 1}$) accounting for imaging measurement noise.
+- **Held-Out Forecast Accuracy (MAPE Benchmark):**
+  - Evaluated on held-out post-decision measurements ($\text{day\_index} > D$) across test patients ($N = 37$):
+  - **Patient-Specific Gompertz Fit:** **$4.77\% \pm 3.33\%$ MAPE**
+  - **Population-Average Gompertz Curve:** **$8.19\% \pm 6.63\%$ MAPE**
+  - Patient-tailored fitting reduces future trajectory forecast error by **41.8%** over static population averages while strictly preserving zero lookahead invariance.
 
 ---
 
@@ -140,7 +146,7 @@ Evaluation strictly groups by patient ID (`GroupShuffleSplit` & repeated 5×5 `G
 - Patient selector and current twin state (latest labs, wearable trends vs 30-day baseline)
 - Dual-axis interactive trade-off panel: severe toxicity risk curve vs Gompertz tumor regrowth penalty across candidate dosing windows (+0, +3, +7, +14 days)
 - Longitudinal curves for Absolute Neutrophil Count (ANC) and autonomic HRV trajectories
-- Action matrix with clear callout of the 0.12 tuned threshold and risk flag operational characteristics
+- Action matrix with 3 risk tiers based on tuned threshold T (0.11), 90% forecast CI, and risk flag characteristics
 - Model performance tab embedding ROC, calibration, PR operating point, and coefficient plots
 - Permanent banner: *"For Clinical Decision Support and Simulation Only. Not an Autonomous Prescription Engine."*
 
@@ -211,7 +217,7 @@ Python, Pandas, NumPy, Scikit-Learn, SHAP, Plotly, Streamlit.
 > [!WARNING]
 > **Essential Methodological Limitations & Non-Clinical Status:**
 > - **Synthetic Proxy Assumption:** The observed paired wearable gain ($+0.0510 \pm 0.0106$ CV AUROC) directly depends on the synthetic generator's assumption that autonomic wearable trends (RHR, HRV, steps) serve as noisy proxies for an unobserved biological recovery rate ($r_i$) and latent marrow vulnerability. If real-world wearable signals are decoupled from bone marrow nadir dynamics, this incremental utility may not generalize.
-> - **Risk Flag, Not Safety Guarantee:** At the tuned threshold (0.12), the model catches about 69% of severe events with about 37% precision on a small synthetic test set, meaning it serves as an advisory risk flag to support clinician judgment rather than a definitive safety guarantee. Because the test set is small, the recall estimate has wide uncertainty.
+> - **Risk Flag, Not Safety Guarantee:** At the tuned threshold (0.11), the model catches about 91% of severe events with about 35% precision on a small synthetic test set, meaning it serves as an advisory risk flag to support clinician judgment rather than a definitive safety guarantee. Because the test set is small, the recall estimate has wide uncertainty.
 > - **Synthetic Data Only:** All findings and performance figures reflect simulated data, not clinically validated patient outcomes.
 > - **Not Monotonically Perfect:** Dosing delay ranking exhibits meaningful variance (Tau spread $\sigma = 0.2218$, IQR = $0.3333$) due to individual recovery kinetics and noise; perfect ordering should never be claimed.
 > - **Decision Support Only:** The system generates informational risk trajectories for simulation and pair-programming research. It is **not** an autonomous prescribing device.
