@@ -139,12 +139,12 @@ Evaluation strictly groups by patient ID (`GroupShuffleSplit` & repeated 5×5 `G
   - **Population-Average Gompertz Curve:** **$8.19\% \pm 6.63\%$ MAPE**
   - Patient-tailored fitting reduces future trajectory forecast error by **41.8%** over static population averages while strictly preserving zero lookahead invariance.
 - **Empirical Coverage of 90% Uncertainty Band:**
-  - Evaluated across held-out test patients and multiple decision days ($N = 726$ forward evaluations):
+  - Evaluated across held-out test patients and multiple decision days ($N = 726$ forward evaluations). Note that coverage was checked only for delay scenarios where the real patient received no dose in the window (uninhibited regrowth intervals):
   - **Delay +0 days:** **100.0% coverage** ($N = 222$)
   - **Delay +3 days:** **95.5% coverage** ($N = 202$)
   - **Delay +7 days:** **98.3% coverage** ($N = 179$)
   - **Delay +14 days:** **95.1% coverage** ($N = 123$)
-  - **Overall Empirical Coverage:** **97.5%** (comfortably meeting and exceeding the nominal 90% target with well-calibrated bounds).
+  - **Overall Empirical Coverage:** **97.5%** (conservative coverage relative to the 90% nominal target, providing reliable protection against underestimating regrowth uncertainty).
 
 ---
 
