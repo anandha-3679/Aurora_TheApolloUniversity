@@ -309,3 +309,86 @@ class GompertzTumorModel:
             "population_average_mape_std": float(np.std(population_mapes)),
             "num_test_patients": len(patient_mapes),
         }
+
+    def evaluate_empirical_coverage(
+        self,
+        clinical_df: pd.DataFrame,
+        decision_days: Optional[List[int]] = None,
+        candidate_delays: Optional[List[int]] = None,
+        test_patient_ids: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Compute empirical coverage of the 90% forecast uncertainty band.
+
+        Calculates the fraction of true post-decision measurements that fall
+        within the forecasted 90% uncertainty band [lower_bound, upper_bound].
+        """
+        if decision_days is None:
+            decision_days = [7, 14, 21, 28, 35, 42]
+        if candidate_delays is None:
+            candidate_delays = [0, 3, 7, 14]
+
+        all_pids = clinical_df["patient_id"].unique()
+        if test_patient_ids is None:
+            np.random.seed(42)
+            test_pids = list(
+                np.random.choice(
+                    all_pids, size=max(5, int(0.25 * len(all_pids))), replace=False
+                )
+            )
+        else:
+            test_pids = list(test_patient_ids)
+
+        coverage_by_delay = {d: [] for d in candidate_delays}
+        all_samples = []
+
+        for pid in test_pids:
+            p_df = clinical_df[clinical_df["patient_id"] == pid].sort_values(
+                "day_index"
+            )
+            for d_val in decision_days:
+                if d_val >= p_df["day_index"].max() - max(candidate_delays):
+                    continue
+
+                fit = self.fit_patient_parameters(p_df, decision_day=d_val)
+                fc = self.forecast_with_uncertainty(
+                    current_volume=fit["volume_at_d"],
+                    candidate_delays=candidate_delays,
+                    growth_rate=fit["growth_rate"],
+                    kill_fraction=fit["kill_fraction"],
+                    residual_std=fit["residual_std"],
+                )
+
+                for delay in candidate_delays:
+                    target_day = d_val + delay
+                    future_row = p_df[p_df["day_index"] == target_day]
+                    if future_row.empty:
+                        continue
+
+                    # Filter out cycles with intervening real chemotherapy doses
+                    intervening_doses = p_df[
+                        (p_df["day_index"] > d_val)
+                        & (p_df["day_index"] <= target_day)
+                        & (p_df["dose_mg"] > 0)
+                    ]
+                    if not intervening_doses.empty:
+                        continue
+
+                    actual_vol = float(future_row.iloc[0]["tumor_volume_cm3"])
+                    low = fc[delay]["lower_bound_90_cm3"]
+                    upp = fc[delay]["upper_bound_90_cm3"]
+                    inside = bool(low <= actual_vol <= upp)
+                    coverage_by_delay[delay].append(inside)
+                    all_samples.append(inside)
+
+        res = {
+            f"coverage_delay_{d}": (
+                float(np.mean(coverage_by_delay[d]))
+                if coverage_by_delay[d]
+                else 0.0
+            )
+            for d in candidate_delays
+        }
+        res["sample_counts"] = {d: len(coverage_by_delay[d]) for d in candidate_delays}
+        res["overall_coverage"] = float(np.mean(all_samples)) if all_samples else 0.0
+        res["total_evaluations"] = len(all_samples)
+        return res

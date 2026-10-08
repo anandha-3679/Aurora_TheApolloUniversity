@@ -104,3 +104,18 @@ def test_evaluate_forecast_mape_outperforms_population():
         mape_results["patient_specific_mape_mean"]
         < mape_results["population_average_mape_mean"]
     )
+
+
+def test_evaluate_empirical_coverage_nominal_target():
+    """Assert empirical coverage of 90% uncertainty band is valid (> 90%)."""
+    clinical_df = pd.read_csv("data/clinical_logs.csv")
+    model = GompertzTumorModel()
+    cov_results = model.evaluate_empirical_coverage(clinical_df)
+
+    assert cov_results["total_evaluations"] > 100
+    for delay in [0, 3, 7, 14]:
+        # Nominal target is 90%; assert actual coverage is well calibrated (>= 90%)
+        assert cov_results[f"coverage_delay_{delay}"] >= 0.90, (
+            f"Coverage at delay {delay} fell below 90%: "
+            f"{cov_results[f'coverage_delay_{delay}']:.1%}"
+        )
