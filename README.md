@@ -139,19 +139,19 @@ To ensure empirical stability beyond a single dataset realization, models were e
 ### Explainability & Upgraded Cost-of-Delay Module
 - Standardized log-odds coefficients and feature importance weights reveal top risk drivers (e.g., severe drops in 7-day HRV and step count relative to personal baseline).
 - **Patient-Specific Gompertz Estimation:** At decision day $D$, the module fits patient-specific biological kinetics (growth rate $\alpha$ and chemotherapy kill effect $\kappa$) using bounded nonlinear least squares strictly on retrospective observations ($\text{day\_index} \le D$, zero future lookahead).
-- **Forecast Uncertainty (90% Band):** For candidate delays (0, 3, 7, 14 days), the engine generates prospective tumor volume trajectories with a calibrated 90% confidence ribbon ($\pm 1.645 \cdot \sigma \sqrt{\text{delay} + 1}$) accounting for imaging measurement noise.
+- **Forecast Uncertainty (90% Band):** For candidate delays (0, 3, 7, 14 days), the engine generates prospective tumor volume trajectories with a conservative (97.5% empirical coverage vs 90% nominal) uncertainty ribbon ($\pm 1.645 \cdot \sigma \sqrt{\text{delay} + 1}$) accounting for imaging measurement noise. Coverage was checked only for delay scenarios where the real patient received no dose in the window.
 - **Held-Out Forecast Accuracy (MAPE Benchmark):**
   - Evaluated on held-out post-decision measurements ($\text{day\_index} > D$) across test patients ($N = 37$):
   - **Patient-Specific Gompertz Fit:** **$4.77\% \pm 3.33\%$ MAPE**
   - **Population-Average Gompertz Curve:** **$8.19\% \pm 6.63\%$ MAPE**
   - Patient-tailored fitting reduces future trajectory forecast error by **41.8%** over static population averages while strictly preserving zero lookahead invariance.
 - **Empirical Coverage of 90% Uncertainty Band:**
-  - Evaluated across held-out test patients and multiple decision days ($N = 726$ forward evaluations). Note that coverage was checked only for delay scenarios where the real patient received no dose in the window (uninhibited regrowth intervals):
+  - Evaluated across held-out test patients and multiple decision days ($N = 726$ forward evaluations). Coverage was checked only for delay scenarios where the real patient received no dose in the window:
   - **Delay +0 days:** **100.0% coverage** ($N = 222$)
   - **Delay +3 days:** **95.5% coverage** ($N = 202$)
   - **Delay +7 days:** **98.3% coverage** ($N = 179$)
   - **Delay +14 days:** **95.1% coverage** ($N = 123$)
-  - **Overall Empirical Coverage:** **97.5%** (conservative coverage relative to the 90% nominal target, providing reliable protection against underestimating regrowth uncertainty).
+  - **Overall Empirical Coverage:** **conservative (97.5% empirical coverage vs 90% nominal)**, providing reliable protection against underestimating regrowth uncertainty.
 
 ---
 

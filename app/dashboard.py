@@ -334,6 +334,11 @@ with tab1:
             height=390,
         )
         st.plotly_chart(fig_tradeoff, use_container_width=True)
+        st.caption(
+            "**Tumor Forecast Band:** Conservative (97.5% empirical coverage "
+            "vs 90% nominal). Coverage was checked only for delay scenarios "
+            "where the real patient received no dose in the window."
+        )
 
     with col_r:
         st.markdown("#### Clinical Action Matrix")
