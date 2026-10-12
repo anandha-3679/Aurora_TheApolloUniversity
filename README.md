@@ -104,28 +104,35 @@ Parameters are anchored to published literature (`docs/references.md`).
 
 ### Rigorous Evaluation & Ablation Results
 
-Evaluation strictly groups by patient ID (`GroupShuffleSplit` & repeated 5×5 `GroupKFold`), preventing longitudinal row-level leakage:
+Evaluation strictly groups by patient ID (`GroupShuffleSplit` & repeated 5×5 `GroupKFold`), preventing longitudinal row-level leakage.
 
-| Model | CV AUROC Ablation A (Clinical only) | CV AUROC Ablation B (+ Wearables) | Paired Diff $(B - A)$ Fold Mean $\pm$ 95% CI | Test AUROC | Test Brier Score | Untouched Test Recall (at Thresh=0.11) | Untouched Test Precision | Timing Ranking Tau Mean $\pm$ Std (IQR) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Logistic Regression (Main)** | **0.8684** | **0.8960** | **+0.0276 ± 0.0092** | **0.9165** | **0.0660** | **90.91%** | **35.09%** | **0.6782 ± 0.3911 (IQR 0.3333)** |
-| Random Forest | 0.8304 | 0.8541 | +0.0237 ± 0.0094 | 0.8022 | 0.0951 | 72.73% | 22.38% | 0.4896 ± 0.4592 (IQR 0.4252) |
-| Gradient Boosting | 0.8279 | 0.8700 | +0.0421 ± 0.0082 | 0.8663 | 0.0889 | 84.09% | 33.04% | 0.6216 ± 0.4212 (IQR 0.6667) |
+To ensure empirical stability beyond a single dataset realization, models were evaluated across **5 distinct data generator seeds** (Seeds 42, 101, 2024, 7, 999). We report the **mean and min–max range** across these runs alongside reference point estimates:
 
-> **Methodological Honesty Note on Metrics:**
-> - Rather than claiming "statistical significance" on reused patient folds, we report the paired difference fold interval $(+0.0276 \pm 0.0092)$, demonstrating consistent improvement across splits.
-> - Holdout test performance (Test AUROC 0.9165) reflects our simulated cohort; we lean on the cross-validation paired differences (+0.0276 AUROC) rather than raw holdout numbers alone to evaluate incremental wearable utility.
+| Metric | Multi-Seed Mean | Multi-Seed Range (Min – Max) | Reference Run (Seed 42) |
+| :--- | :--- | :--- | :--- |
+| **Paired Wearable Gain $(B - A)$** | **+0.0354 AUROC** | **+0.0266 to +0.0478** | +0.0276 ± 0.0092 |
+| **CV AUROC Ablation B (+ Wearables)** | **0.8978** | **0.8702 to 0.9184** | 0.8960 |
+| **CV AUROC Ablation A (Clinical only)**| **0.8623** | **0.8345 to 0.8838** | 0.8684 |
+| **Holdout Test AUROC** | **0.9084** | **0.8718 to 0.9258** | 0.9165 |
+| **CV-Tuned Threshold** | **0.114** | **0.100 to 0.140** | 0.110 |
+| **Untouched Test Recall** | **88.88%** | **82.35% to 94.55%** | 90.91% |
+| **Untouched Test Precision** | **37.44%** | **34.21% to 45.03%** | 35.09% |
+| **Timing Ranking Kendall Tau** | **0.7251** | **0.6384 to 0.8281** | 0.6782 |
+
+> **Methodological Honesty Note on Multi-Seed Metrics:**
+> - Across all 5 seeds, adding wearable signals consistently improved cross-validation discrimination over clinical features alone, with a mean paired gain of **+0.0354 AUROC** (ranging from **+0.0266 to +0.0478**).
+> - Rather than relying on a single lucky holdout split, holdout test performance averages **0.9084 AUROC** (range: **0.8718 to 0.9258**).
 
 ### Clinical Safety Threshold & Operational Limitation
-- Rather than an arbitrary 0.50 cutoff, the decision threshold was tuned strictly inside validation folds to **0.11** to prioritize patient safety.
-- **Operational Limitation:** At the tuned threshold (0.11), the model catches about 91% of severe events with about 35% precision on a small synthetic test set, so it is a risk flag to support clinician judgment, not a safety guarantee. Because the test set is small, the recall estimate has wide uncertainty. Approximately 6 to 7 out of 10 alerts represent false alarms.
+- Rather than an arbitrary 0.50 cutoff, the decision threshold was tuned strictly inside validation folds to prioritize patient safety, averaging **0.114** (range: **0.100 to 0.140**).
+- **Operational Limitation:** At the CV-tuned threshold, the model catches an average of **88.9% of severe events** (range: **82.4% to 94.6%**) with **37.4% precision** (range: **34.2% to 45.0%**) on small synthetic test cohorts. Because test sets are finite, the recall and precision estimates carry empirical uncertainty across seeds. Approximately 6 out of 10 alerts represent false alarms, underscoring that the system serves as an advisory risk flag to support clinician judgment, not a safety guarantee.
 
 ### Timing Ranking Evaluation: Definition & Empirical Spread
 - **Kendall Tau Definition:** Computed strictly per patient and treatment cycle between the model's **predicted toxicity risk** and the **TRUE simulated risk** across candidate delays (+0, +3, +7, +14 days). The TRUE simulated risk is derived from the latent ANC trajectory (where lower nadir ANC corresponds to greater acute toxicity risk: $\text{true\_risk} = -\text{nadir\_anc}$). The concordance coefficients are then averaged across all test cycles.
-- **Empirical Distribution (Mean & Spread):**
-  - **Logistic Regression (Main):** Mean Tau = **0.6782**, Std = **0.3911**, Median = **0.8165**, IQR = **0.3333**.
-  - **Random Forest:** Mean Tau = **0.4896**, Std = **0.4592**, IQR = **0.4252**.
-  - **Gradient Boosting:** Mean Tau = **0.6216**, Std = **0.4212**, IQR = **0.6667**.
+- **Empirical Multi-Seed Distribution:**
+  - **Logistic Regression (Main):** Mean Tau across seeds = **0.7251** (range: **0.6384 to 0.8281**; intra-run spread IQR = **0.3333 to 0.6667**).
+  - **Random Forest:** Mean Tau across seeds = **0.5790** (range: **0.4896 to 0.6760**).
+  - **Gradient Boosting:** Mean Tau across seeds = **0.7033** (range: **0.6216 to 0.7581**).
 - **Honest Framing on Timing & Ordering:** We do **not** claim perfect monotonic ordering (+1.0000). Biological noise, nonlinear marrow recovery rates ($r_i$), and stochastic stress spikes produce realistic rank inversions across candidate delays, accurately captured by the spread metrics.
 - **Prospective Daily Re-scoring:** All candidate delays are evaluated strictly with retrospective features frozen at decision day $D$. In clinical practice, the twin operates by **daily morning re-scoring**, updating risk as real-world biometrics reveal whether marrow recovery is actually underway.
 
@@ -223,10 +230,10 @@ Python, Pandas, NumPy, Scikit-Learn, SHAP, Plotly, Streamlit.
 
 > [!WARNING]
 > **Essential Methodological Limitations & Non-Clinical Status:**
-> - **Synthetic Proxy Assumption:** The observed paired wearable gain ($+0.0510 \pm 0.0106$ CV AUROC) directly depends on the synthetic generator's assumption that autonomic wearable trends (RHR, HRV, steps) serve as noisy proxies for an unobserved biological recovery rate ($r_i$) and latent marrow vulnerability. If real-world wearable signals are decoupled from bone marrow nadir dynamics, this incremental utility may not generalize.
-> - **Risk Flag, Not Safety Guarantee:** At the tuned threshold (0.11), the model catches about 91% of severe events with about 35% precision on a small synthetic test set, meaning it serves as an advisory risk flag to support clinician judgment rather than a definitive safety guarantee. Because the test set is small, the recall estimate has wide uncertainty.
+> - **Synthetic Proxy Assumption:** The observed paired wearable gain (mean $+0.0354$ CV AUROC, range $+0.0266$ to $+0.0478$ across 5 seeds) directly depends on the synthetic generator's assumption that autonomic wearable trends (RHR, HRV, steps) serve as noisy proxies for an unobserved biological recovery rate ($r_i$) and latent marrow vulnerability. If real-world wearable signals are decoupled from bone marrow nadir dynamics, this incremental utility may not generalize.
+> - **Risk Flag, Not Safety Guarantee:** At the CV-tuned threshold (mean 0.114), the model catches an average of 88.9% of severe events (range 82.4%–94.6%) with 37.4% precision (range 34.2%–45.0%) across seeds on synthetic test sets, meaning it serves as an advisory risk flag to support clinician judgment rather than a definitive safety guarantee.
 > - **Synthetic Data Only:** All findings and performance figures reflect simulated data, not clinically validated patient outcomes.
-> - **Not Monotonically Perfect:** Dosing delay ranking exhibits meaningful variance (Tau spread $\sigma = 0.2218$, IQR = $0.3333$) due to individual recovery kinetics and noise; perfect ordering should never be claimed.
+> - **Not Monotonically Perfect:** Dosing delay ranking exhibits realistic variance (Tau mean 0.7251, range 0.6384 to 0.8281 across seeds) due to individual recovery kinetics and biological noise; perfect ordering should never be claimed.
 > - **Decision Support Only:** The system generates informational risk trajectories for simulation and pair-programming research. It is **not** an autonomous prescribing device.
 > - **Regulatory Prerequisites:** Real-world translational application mandates clinical trial validation, formal prospective auditing, and full regulatory clearance (DPDP Act, HIPAA, FDA SaMD).
 
