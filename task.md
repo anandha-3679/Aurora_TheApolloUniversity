@@ -16,9 +16,9 @@
 - [x] Task 1 (Audit): Trace candidate dosing day feature builder (`src/features.py`), timing dataset (`data/timing_eval.csv`), dashboard (`app/dashboard.py`), and training pipeline (`src/train_toxicity.py`) to document all data leakage from days > decision day D.
 - [x] Task 2 (Fix): Refactor feature builder to freeze wearable and lab metrics at decision day D (<= D), represent delay via known scheduling attributes (`days_until_dose` / `delay_days`, `days_since_last_dose`), ensuring zero future wearable lookahead.
 - [x] Task 3 (Training & Timing Realignment): Rebuild training dataset where decisions at day D predict outcomes under candidate delays using strictly <= D features.
-- [ ] Task 4 (Tests): Implement pytest suite asserting future perturbation invariance (perturbing data > D leaves predictions for all delays identical) and verifying label windows start post-dose.
-- [ ] Task 5 (Re-evaluation): Rerun repeated 5x5 Group CV, paired diffs (A vs B), validation-only threshold tuning, and intra-patient Kendall tau; report honest before vs after metrics.
-- [ ] Task 6 (Documentation): Update `README.md` and `app/dashboard.py` methodology notes to state strictly zero future lookahead.
+- [x] Task 4 (Tests): Implement pytest suite asserting future perturbation invariance (perturbing data > D leaves predictions for all delays identical) and verifying label windows start post-dose.
+- [x] Task 5 (Re-evaluation): Rerun repeated 5x5 Group CV, paired diffs (A vs B), validation-only threshold tuning, and intra-patient Kendall tau; report honest before vs after metrics.
+- [x] Task 6 (Documentation): Update `README.md` and `app/dashboard.py` methodology notes to state strictly zero future lookahead.
 
 
 ## Completed Tasks
