@@ -223,7 +223,6 @@ The clinical decision-support application ([`app/dashboard.py`](file:///c:/Users
 | **6** | Streamlit Clinician Dashboard | **Completed** | Interactive 3-tab decision support app, dual-axis trade-off chart, action matrix, trajectory monitoring ([`app/dashboard.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/app/dashboard.py)). |
 | **7** | Automated Test Suite | **Completed** | 12 tests passing (`python -m pytest -q`): tests data generation, Gompertz kinetics, future perturbation invariance, and label window alignment. |
 | **8** | Code Quality & Documentation | **Completed** | Ruff linting clean (`python -m ruff check .`), comprehensive scientific references ([`docs/references.md`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/references.md)), architecture and presentation decks in `docs/`. |
-| **9** | Video Recording (20+ min) | *Pending Recording* | Minimum 20-minute walkthrough presentation and live dashboard demonstration. |
 
 ---
 
