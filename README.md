@@ -24,7 +24,7 @@
 - [x] This README with all required details and exact current state
 - [x] Architecture diagram (PDF/PPT) in [`docs/architecture.pdf`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/)
 - [x] Project presentation (PDF/PPT) in [`docs/presentation.ppt`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/)
-- [ ] Demo video, **minimum 20 minutes** (PowerPoint recording or unlisted YouTube link): [https://youtu.be/5ErsbsEemWQ]
+- [x] Demo video, **minimum 20 minutes** (PowerPoint recording or unlisted YouTube link): [https://youtu.be/5ErsbsEemWQ]
 - [x] Open-source license file ([`LICENSE`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/LICENSE))
 - [x] Comprehensive test suite passing with zero-leakage assertions (30 passing tests in [`tests/`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/tests/))
 - [x] Strict linting passing clean ([`ruff check .`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/ruff.toml))
