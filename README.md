@@ -23,7 +23,7 @@
 - [x] Public GitHub repository, all files and links accessible
 - [x] This README with all required details and exact current state
 - [x] Architecture diagram (PDF/PPT) in [`docs/architecture.pdf`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/)
-- [x] Project presentation (PDF/PPT) in [`docs/presentation.pdf`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/)
+- [x] Project presentation (PDF/PPT) in [`docs/presentation.ppt`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/)
 - [ ] Demo video, **minimum 20 minutes** (PowerPoint recording or unlisted YouTube link): [Insert 20-min YouTube / Drive Link Here]
 - [x] Open-source license file ([`LICENSE`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/LICENSE))
 - [x] Comprehensive test suite passing with zero-leakage assertions (30 passing tests in [`tests/`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/tests/))
