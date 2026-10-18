@@ -26,7 +26,7 @@
 - [x] Project presentation (PDF/PPT) in [`docs/presentation.pdf`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/)
 - [ ] Demo video, **minimum 20 minutes** (PowerPoint recording or unlisted YouTube link): [Insert 20-min YouTube / Drive Link Here]
 - [x] Open-source license file ([`LICENSE`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/LICENSE))
-- [x] Comprehensive test suite passing with zero-leakage assertions (12 passing tests in [`tests/`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/tests/))
+- [x] Comprehensive test suite passing with zero-leakage assertions (30 passing tests in [`tests/`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/tests/))
 - [x] Strict linting passing clean ([`ruff check .`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/ruff.toml))
 
 ---
@@ -244,12 +244,14 @@ The clinical decision-support application ([`app/dashboard.py`](file:///c:/Users
 - **Tab 1: Candidate Dosing Window & Trade-Off:**
   - Dual-axis interactive Plotly chart comparing toxicity risk (%) against fitted Gompertz tumor regrowth penalty (%) across candidate windows (+0, +3, +7, +14 days).
   - 90% confidence ribbon for prospective tumor volume.
-  - **Clinical Action Matrix:** Translates probabilities into actionable tiers (🟢 Lower Risk $< 0.17$, 🟡 Elevated $0.17–0.34$, 🔴 High Risk $> 0.34$) with volume 90% CI and operational trade-off metrics.
+  - **Clinical Action Matrix:** Translates probabilities into actionable tiers (🟢 Lower Risk $< \theta$, 🟡 Elevated $\theta–2\theta$, 🔴 High Risk $> 2\theta$, where $\theta \approx 0.10$ is the CV-tuned operating threshold) with volume 90% CI and operational trade-off metrics.
+  - **Experimental Marrow Model Toggle:** A dedicated sidebar toggle (*"Show experimental marrow (Friberg) model"*, default **OFF**) isolates the exploratory Friberg PK/PD module. When switched ON, a prominent clinical warning banner is displayed alongside mechanistic nadir curves and hybrid risk predictions.
 - **Tab 2: Physiological Trajectories:**
   - Longitudinal Absolute Neutrophil Count (ANC) trajectory with Grade 3/4 severe neutropenia threshold ($1.0 \times 10^9/\text{L}$) callout.
   - Longitudinal Heart Rate Variability (HRV RMSSD) showing personal baseline vs 7-day rolling window.
 - **Tab 3: Model Performance & Ablation:**
-  - Live ablation summary table across Logistic Regression, Random Forest, and Gradient Boosting.
+  - **Headline Multi-Seed Benchmark Table:** Prominently displays aggregate performance across 5 generator seeds (`multi_seed_aggregate_table.csv`) to prevent single-seed bias.
+  - **Reference Run Benchmark:** Live ablation summary across Logistic Regression, Random Forest, and Gradient Boosting for reference Seed 42 (`models/ablation_summary.csv`).
   - Embedded ROC curve ([`roc_curve_ablation.png`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/figures/roc_curve_ablation.png)) and Calibration Curve ([`calibration_curve.png`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/figures/calibration_curve.png)).
 
 ---
@@ -272,12 +274,12 @@ The clinical decision-support application ([`app/dashboard.py`](file:///c:/Users
 | Step | Task | Status | Details |
 |:---:|:---|:---:|:---|
 | **1** | Synthetic Data Generator | **Completed** | Generates 150 patients, 90 days, 600 doses, Friberg-style myelosuppression, Gompertz tumor kinetics, noisy lagged wearables ([`src/generate_data.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/generate_data.py)). |
-| **2** | Cost-of-Delay Gompertz Module | **Completed** | Patient-specific parameter fitting ($\alpha, \kappa$), 90% uncertainty band, held-out MAPE validation (5.10% vs 7.46%), empirical coverage validation (97.5%) ([`src/tumor_model.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/tumor_model.py)). |
+| **2** | Cost-of-Delay Gompertz Module | **Completed** | Patient-specific parameter fitting ($\alpha, \kappa$), 90% uncertainty band, held-out MAPE validation (4.74% vs 7.73%), empirical coverage validation (98.1%) ([`src/tumor_model.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/tumor_model.py)). |
 | **3** | Feature Engineering Pipeline | **Completed** | Strictly retrospective features ($\le D$), 7d rolling trends vs 30d baseline, timing candidate features, zero future lookahead ([`src/features.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/features.py)). |
-| **4** | Toxicity Model Training & Ablations | **Completed** | Repeated 5x5 Group CV, paired diffs (+0.0483 AUROC mean gain), validation-tuned thresholding (0.17), Kendall Tau timing ranking (0.7725), multi-seed evaluation across 5 seeds ([`src/train_toxicity.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/train_toxicity.py)). |
-| **5** | Evaluation & Artifact Generation | **Completed** | ROC curves, calibration diagrams, PR operating curves, feature weight bar plots generated in `docs/figures/` ([`src/evaluate.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/evaluate.py)). |
-| **6** | Streamlit Clinician Dashboard | **Completed** | Interactive 3-tab decision support app, dual-axis trade-off chart, action matrix, trajectory monitoring ([`app/dashboard.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/app/dashboard.py)). |
-| **7** | Automated Test Suite | **Completed** | 12 tests passing (`python -m pytest -q`): tests data generation, Gompertz kinetics, future perturbation invariance, and label window alignment. |
+| **4** | Toxicity Model Training & Ablations | **Completed** | Repeated 5x5 Group CV, paired diffs (+0.0096 AUROC mean gain across 5 seeds; reference run +0.0113), validation-tuned thresholding (0.108 mean, 0.100 ref), Kendall Tau timing ranking (0.3203 mean, 0.4326 ref; mechanistic ODE twin tau 0.4003) ([`src/train_toxicity.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/train_toxicity.py)). |
+| **5** | Evaluation & Artifact Generation | **Completed** | ROC curves, calibration diagrams, PR operating curves, coupling stress tests, feature weight bar plots generated in `docs/figures/` ([`src/evaluate.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/src/evaluate.py)). |
+| **6** | Streamlit Clinician Dashboard | **Completed** | Interactive 3-tab decision support app with experimental Friberg sidebar toggle, dual-axis trade-off chart, action matrix, trajectory monitoring ([`app/dashboard.py`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/app/dashboard.py)). |
+| **7** | Automated Test Suite | **Completed** | 30 tests passing (`python -m pytest -q`): tests data generation, Gompertz kinetics, future perturbation invariance, label window alignment, and Friberg ODE kinetics. |
 | **8** | Code Quality & Documentation | **Completed** | Ruff linting clean (`python -m ruff check .`), comprehensive scientific references ([`docs/references.md`](file:///c:/Users/Anandha%20Lakshmi/Digital_twin/docs/references.md)), architecture and presentation decks in `docs/`. |
 
 ---
@@ -309,7 +311,9 @@ Aurora_TheApolloUniversity/
 │       ├── roc_curve_ablation.png
 │       ├── calibration_curve.png
 │       ├── precision_recall_operating_point.png
-│       └── feature_weights.png
+│       ├── feature_weights.png
+│       ├── coupling_sensitivity_stress_test.png
+│       └── multi_seed_aggregate_table.csv
 ├── models/                        # Serialized ML artifacts and benchmarks
 │   ├── main_toxicity_model.joblib # Standardized Logistic Regression main model
 │   ├── rf_toxicity_model.joblib   # Random Forest benchmark
@@ -410,14 +414,14 @@ To verify and reproduce all headline metrics, multi-seed benchmarks, and figures
 
 > [!WARNING]
 > **Essential Methodological Limitations & Non-Clinical Status:**
-> - **Synthetic Proxy Assumption:** The observed paired wearable gain (mean $+0.0483$ CV AUROC, range $+0.0347$ to $+0.0563$ across 5 seeds) directly depends on the synthetic generator's assumption that autonomic wearable trends (RHR, HRV, steps) serve as noisy proxies for an unobserved biological recovery rate ($r_i$) and latent marrow vulnerability. If real-world wearable signals are decoupled from bone marrow nadir dynamics, this incremental utility may not generalize.
-> - **Optimistic Tumor Forecast Validation:** Tumor volume forecasts are validated only on synthetic data generated from the same Gompertz mathematical family; real-world tumors often deviate from pure Gompertzian dynamics, making this error comparison (5.10% vs. 7.46% MAPE) optimistic.
-> - **Approximate Uncertainty Band:** The 90% tumor forecast uncertainty band relies on a normal measurement error approximation and accumulated variance propagation; it represents an approximate uncertainty guide rather than a rigorous Bayesian credible interval.
-> - **Cohort Size & Seed Variability:** All toxicity and calibration metrics come from a small synthetic cohort (150 patients) and exhibit meaningful empirical variation across random generator seeds (e.g., recall varies from 82.4% to 94.6%, precision from 34.2% to 45.0%, and Kendall tau from 0.6384 to 0.8281).
-> - **Risk Flag, Not Safety Guarantee:** At the CV-tuned threshold (mean 0.168), the model catches an average of 88.7% of severe events with 50.0% precision across seeds, meaning it serves as an advisory risk flag to support clinician judgment rather than a definitive safety guarantee.
+> - **Synthetic Proxy Assumption:** The observed paired wearable gain (mean $+0.0096$ CV AUROC, range $-0.0087$ to $+0.0212$ across 5 seeds; reference run $+0.0113 \pm 0.0081$) directly depends on the synthetic generator's physiological assumption that autonomic wearable trends (RHR, HRV, steps) serve as noisy, lagged proxies for upstream marrow strain. If real-world wearable signals are decoupled from bone marrow nadir dynamics ($\kappa = 0$), this incremental utility collapses to a noise penalty ($-0.0104$ AUROC).
+> - **Optimistic Tumor Forecast Validation:** Tumor volume forecasts are validated on synthetic data generated within the Gompertz mathematical family; real-world tumors may deviate from pure Gompertzian dynamics, making this error comparison (4.74% vs. 7.73% MAPE) optimistic.
+> - **Approximate Uncertainty Band:** The 90% tumor forecast uncertainty band relies on a normal measurement error approximation and accumulated variance propagation; it represents an approximate uncertainty guide rather than a rigorous Bayesian credible interval, though it demonstrated 98.1% empirical coverage.
+> - **Cohort Size & Seed Variability:** All toxicity and calibration metrics come from a synthetic cohort of 150 patients and exhibit meaningful empirical variation across random generator seeds (e.g., test recall varies from 84.8% to 96.1%, precision from 26.2% to 52.2%, and Kendall tau from -0.1337 to 0.4714).
+> - **Advisory Risk Flag, Not Safety Guarantee:** At the CV-tuned threshold (mean 0.108, reference run 0.100), the model catches an average of 90.9% of severe events with 42.7% precision across seeds (26.2% precision in Seed 42 reference run, ~74% false alarm rate), meaning it serves as an advisory early-warning risk flag to support oncologist review, not an autonomous safety guarantee.
 > - **Synthetic Data Only:** All findings and performance figures reflect simulated data, not clinically validated patient outcomes.
-> - **Not Monotonically Perfect:** Dosing delay ranking exhibits realistic variance (Tau mean 0.7725, range 0.7446 to 0.8104 across seeds) due to individual recovery kinetics and biological noise; perfect ordering should never be claimed.
-> - **Decision Support Only:** The system generates informational risk trajectories for simulation and pair-programming research. It is **not** an autonomous prescribing device.
+> - **Timing Ranking Ordering:** Dosing delay ranking exhibits moderate correlation (Kendall Tau mean 0.3203 across seeds for ML; 0.4003 for Friberg ODE twin). We explicitly drop any claim that ONCO-TWIN "predicts the best day" and treat candidate delay scoring as advisory risk stratification across candidate windows.
+> - **Decision Support Only:** The system generates informational risk trajectories for simulation and clinical decision support. It is **not** an autonomous prescribing device.
 > - **Regulatory Prerequisites:** Real-world translational application mandates clinical trial validation, formal prospective auditing, and full regulatory clearance (DPDP Act, HIPAA, FDA SaMD).
 
 ---
