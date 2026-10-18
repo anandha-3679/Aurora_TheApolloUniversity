@@ -1,4 +1,4 @@
 Model,CV AUROC Ablation A,CV AUROC Ablation B,Paired Diff (B - A),Test AUROC,Test Brier,CV-Tuned Threshold,Untouched Test Recall,Untouched Test Precision,Timing Ranking Tau (Mean),Timing Tau Spread (Std),Timing Tau Spread (IQR)
-Logistic Regression,0.8684,0.896,+0.0276 +/- 0.0092,0.9165,0.066,0.11,0.9091,0.3509,0.6782,0.3911,0.3333
-Random Forest,0.8304,0.8541,+0.0237 +/- 0.0094,0.8022,0.0951,0.11,0.7273,0.2238,0.4896,0.4592,0.4252
-Gradient Boosting,0.8279,0.87,+0.0421 +/- 0.0082,0.8663,0.0889,0.1,0.8409,0.3304,0.6216,0.4212,0.6667
+Logistic Regression,0.8654,0.8767,+0.0113 +/- 0.0081,0.7738,0.128,0.1,0.8475,0.2618,0.4326,0.5586,0.8174
+Random Forest,0.8453,0.8227,-0.0226 +/- 0.0084,0.6976,0.1284,0.17,0.6949,0.2485,0.4494,0.5239,0.7303
+Gradient Boosting,0.8373,0.8307,-0.0065 +/- 0.0089,0.7013,0.1372,0.1,0.661,0.2308,0.4356,0.5667,0.7303

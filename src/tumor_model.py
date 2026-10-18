@@ -30,9 +30,7 @@ class GompertzTumorModel:
         self.carrying_capacity = carrying_capacity
         self.default_kill_fraction = default_kill_fraction
 
-    def step_growth(
-        self, volume: float, growth_rate: Optional[float] = None
-    ) -> float:
+    def step_growth(self, volume: float, growth_rate: Optional[float] = None) -> float:
         """Calculate one day of uninhibited Gompertz growth."""
         alpha = self.growth_rate if growth_rate is None else growth_rate
         v = max(0.1, float(volume))
@@ -64,11 +62,7 @@ class GompertzTumorModel:
         ].sort_values("day_index")
 
         if len(hist) < 3:
-            v_d = (
-                float(hist.iloc[-1]["tumor_volume_cm3"])
-                if not hist.empty
-                else 20.0
-            )
+            v_d = float(hist.iloc[-1]["tumor_volume_cm3"]) if not hist.empty else 20.0
             return {
                 "growth_rate": self.growth_rate,
                 "kill_fraction": self.default_kill_fraction,
@@ -155,11 +149,7 @@ class GompertzTumorModel:
             candidate_delays = [0, 3, 7, 14]
 
         alpha = self.growth_rate if growth_rate is None else growth_rate
-        kill = (
-            self.default_kill_fraction
-            if kill_fraction is None
-            else kill_fraction
-        )
+        kill = self.default_kill_fraction if kill_fraction is None else kill_fraction
 
         # 90% two-sided normal quantile: z = 1.645
         z_multiplier = 1.645 if abs(confidence_level - 0.90) < 1e-4 else 1.960
@@ -173,9 +163,7 @@ class GompertzTumorModel:
                 v_dose = self.step_growth(v_dose, growth_rate=alpha)
 
             # Measurement & accumulation uncertainty: sigma * sqrt(delay + 1)
-            uncertainty_margin = (
-                z_multiplier * residual_std * np.sqrt(delay + 1)
-            )
+            uncertainty_margin = z_multiplier * residual_std * np.sqrt(delay + 1)
 
             lower_bound = max(0.1, round(v_dose - uncertainty_margin, 2))
             upper_bound = min(
@@ -259,16 +247,12 @@ class GompertzTumorModel:
             fit = self.fit_patient_parameters(p_data, decision_day=decision_day)
             v_curr_pt = fit["volume_at_d"]
             v_curr_pop = float(
-                p_data[p_data["day_index"] <= decision_day].iloc[-1][
-                    "tumor_volume_cm3"
-                ]
+                p_data[p_data["day_index"] <= decision_day].iloc[-1]["tumor_volume_cm3"]
             )
 
             actuals = future["tumor_volume_cm3"].values.astype(float)
             fut_days = future["day_index"].values.astype(int)
-            fut_doses = set(
-                future[future["dose_mg"] > 0]["day_index"].tolist()
-            )
+            fut_doses = set(future[future["dose_mg"] > 0]["day_index"].tolist())
 
             pt_preds = []
             pop_preds = []
@@ -287,17 +271,11 @@ class GompertzTumorModel:
                 if d in fut_doses:
                     v_curr_pop = max(0.1, v_curr_pop * (1.0 - pop_kill))
                 else:
-                    v_curr_pop = self.step_growth(
-                        v_curr_pop, growth_rate=pop_alpha
-                    )
+                    v_curr_pop = self.step_growth(v_curr_pop, growth_rate=pop_alpha)
                 pop_preds.append(v_curr_pop)
 
-            pt_err = (
-                np.mean(np.abs(np.array(pt_preds) - actuals) / actuals) * 100.0
-            )
-            pop_err = (
-                np.mean(np.abs(np.array(pop_preds) - actuals) / actuals) * 100.0
-            )
+            pt_err = np.mean(np.abs(np.array(pt_preds) - actuals) / actuals) * 100.0
+            pop_err = np.mean(np.abs(np.array(pop_preds) - actuals) / actuals) * 100.0
 
             patient_mapes.append(pt_err)
             population_mapes.append(pop_err)
@@ -382,9 +360,7 @@ class GompertzTumorModel:
 
         res = {
             f"coverage_delay_{d}": (
-                float(np.mean(coverage_by_delay[d]))
-                if coverage_by_delay[d]
-                else 0.0
+                float(np.mean(coverage_by_delay[d])) if coverage_by_delay[d] else 0.0
             )
             for d in candidate_delays
         }

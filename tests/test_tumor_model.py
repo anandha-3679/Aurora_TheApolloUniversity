@@ -29,9 +29,7 @@ def test_simulate_cost_of_delay_tradeoff_summary():
     assert summary[7]["excess_volume_cm3"] > summary[3]["excess_volume_cm3"]
     assert summary[14]["excess_volume_cm3"] > summary[7]["excess_volume_cm3"]
     assert summary[14]["regrowth_penalty_pct"] > summary[7]["regrowth_penalty_pct"]
-    assert (
-        summary[14]["upper_bound_90_cm3"] > summary[14]["lower_bound_90_cm3"]
-    )
+    assert summary[14]["upper_bound_90_cm3"] > summary[14]["lower_bound_90_cm3"]
 
 
 def test_perturb_tumor_rows_after_d_invariance():

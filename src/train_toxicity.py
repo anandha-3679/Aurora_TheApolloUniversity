@@ -36,9 +36,7 @@ def evaluate_intra_patient_timing_ranking(
     Evaluated across candidate delays (0, 3, 7, 14 days), then averaged across cycles.
     Returns mean, std, median, and IQR (spread).
     """
-    subset = timing_feat_df[
-        timing_feat_df["patient_id"].isin(test_patient_ids)
-    ].copy()
+    subset = timing_feat_df[timing_feat_df["patient_id"].isin(test_patient_ids)].copy()
     if subset.empty:
         return {
             "mean": 0.0,
@@ -273,7 +271,7 @@ def run_full_training_and_comparison(
 
     for model_name, cfg in models_config.items():
         cv_res = repeated_patient_cross_validation_with_paired_diff(
-            dataset_df=dataset_df,
+            dataset_df=train_data,
             feature_set_a=feature_set_a,
             feature_set_b=feature_set_b,
             model_class=cfg["cls"],
@@ -371,6 +369,4 @@ if __name__ == "__main__":
     parser.add_argument("--models_dir", type=str, default="models")
     args = parser.parse_args()
 
-    run_full_training_and_comparison(
-        data_dir=args.data_dir, models_dir=args.models_dir
-    )
+    run_full_training_and_comparison(data_dir=args.data_dir, models_dir=args.models_dir)

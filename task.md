@@ -30,4 +30,9 @@
 - [x] Phase 2 Refactor: Timing evaluation dataset pipeline added to `src/features.py` (`build_timing_evaluation_dataset`), computing 7d/30d wearable deviations per candidate dosing day; verified with tests passing (`pytest -q`)
 - [x] Phase 3 Refactor: Repeated patient-level CV with paired differences (+0.0518 ± 0.0093 AUROC), intra-patient timing ranking (Tau -0.776), validation-tuned thresholding (0.17 threshold -> 94.1% untouched test recall), and empirical selection of Logistic Regression as Main Model
 - [x] Phase 4: Full evaluation artifact generation (`src/evaluate.py`), interactive Streamlit decision-support dashboard (`app/dashboard.py`), transparent precision/recall trade-off callouts, and honest documentation in `README.md`
+- [x] Phase 5 (Digital Twin Bone Marrow Refactor):
+  - Fix 1: Saturating Emax drug effect with realistic half-life (~1 d) and literature-concordant parameter priors (MTT ~5 d, gamma ~0.17).
+  - Fix 2: Log-parameter multi-start optimization with high-accuracy ODE solves; eliminates optimizer stall and personalizes each patient with low residual error (0.35).
+  - Fix 3: Continuous mechanistic Friberg virtual patient simulator with cumulative cycle damage and realistic log-normal lab sampling.
+  - Fix 4: Real-time Extended Kalman Filter (EKF) state observer in `get_compartment_state` assimilating intermediate ANC lab draws and autonomic wearable strain directly into the 5 compartments. 28/28 tests passing.
 

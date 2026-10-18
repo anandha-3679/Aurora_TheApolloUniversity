@@ -5,3 +5,6 @@ __pycache__/
 .ruff_cache/
 venv/
 .env
+scratch/
+data/seed_*/
+data/benchmark_data_seed_*/

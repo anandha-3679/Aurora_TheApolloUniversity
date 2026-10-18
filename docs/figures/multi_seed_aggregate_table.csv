@@ -1,0 +1,10 @@
+Metric,5-Seed Mean,5-Seed Range,Reference Run (Seed 42)
+CV AUROC Ablation A (Clin),0.8528,0.8358 to 0.8654,0.8654
+CV AUROC Ablation B (+Wear),0.8624,0.8392 to 0.8815,0.8767
+Paired Gain (B - A),+0.0096,-0.0087 to +0.0212,+0.0113
+Holdout Test AUROC,0.8914,0.7738 to 0.9531,0.7738
+Holdout Test Brier Score,0.0964,0.0544 to 0.1280,0.1280
+CV-Tuned Threshold,0.108,0.100 to 0.120,0.100
+Untouched Test Recall,90.89%,84.75% to 96.08%,84.75%
+Untouched Test Precision,42.73%,26.18% to 52.23%,26.18%
+Timing Ranking Kendall Tau,0.3203,-0.1337 to 0.4714,0.4326

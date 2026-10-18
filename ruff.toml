@@ -1,8 +1,9 @@
 line-length = 88
+exclude = ["scratch"]
 
 [lint]
 select = ["E", "F"]
-ignore = []
+ignore = ["E501"]
 
 [format]
 quote-style = "double"

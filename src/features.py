@@ -147,11 +147,20 @@ def build_toxicity_dataset(
         d = int(dose_row["day_index"])
         dose_val = float(dose_row["dose_mg"])
 
-        # Label on post-dose 7-day window
+        # Label on post-dose cycle window (up to next dose or d + 21)
+        next_doses = clinical_df[
+            (clinical_df["patient_id"] == p_id)
+            & (clinical_df["dose_mg"] > 0)
+            & (clinical_df["day_index"] > d)
+        ]
+        window_end = (
+            int(next_doses.iloc[0]["day_index"]) if not next_doses.empty else d + 21
+        )
+
         window = clinical_df[
             (clinical_df["patient_id"] == p_id)
             & (clinical_df["day_index"] > d)
-            & (clinical_df["day_index"] <= d + 7)
+            & (clinical_df["day_index"] <= window_end)
         ]
         label = (
             1
